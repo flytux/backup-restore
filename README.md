@@ -83,6 +83,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: minio
+  namespace: minio
 spec:
   ingressClassName: nginx
   rules:
