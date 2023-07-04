@@ -122,7 +122,7 @@ spec:
         command:
         - /bin/sh
         - -c
-        - "mc --config-dir=/config config host add velero http://minio:9000 minio minio123 && mc --config-dir=/config mb -p velero/velero && mc --config-dir=/config mb -p velero/longhorn"
+        - "mc --config-dir=/config config host add velero http://minio.minio:9000 minio minio123 && mc --config-dir=/config mb -p velero/velero && mc --config-dir=/config mb -p velero/longhorn"
         volumeMounts:
         - name: config
           mountPath: "/config"
