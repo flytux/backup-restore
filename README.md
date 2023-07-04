@@ -122,7 +122,7 @@ spec:
         command:
         - /bin/sh
         - -c
-        - "mc --config-dir=/config config host add velero http://minio:9000 minio minio123 && mc --config-dir=/config mb -p velero/velero"
+        - "mc --config-dir=/config config host add velero http://minio:9000 minio minio123 && mc --config-dir=/config mb -p velero/velero && mc --config-dir=/config mb -p velero/longhorn"
         volumeMounts:
         - name: config
           mountPath: "/config"
@@ -130,7 +130,7 @@ EOF
 ```
 ---
 
-**3) Install Minio**
+**3) Install Longhorn**
 
 ```bash
 
@@ -148,6 +148,8 @@ defaultSettings:
   replicaSoftAntiAffinity: true
   replicaZoneSoftAntiAffinity: true
 EOF
+
+# create bucket longhorn
 
 kubectl create ns longhorn-system
 
