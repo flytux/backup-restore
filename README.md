@@ -1,8 +1,17 @@
-# backup-restore using velero and longhorn
+# Backup and restore k8s workloads with volume using velero and longhorn
+
+---
+**1) Install RKE2**
 
 ```bash
+curl -sfL https://get.rke2.io | sh -
+systemctl enable rke2-server --now
+```
+---
 
-# Install Minio
+**2) Install Minio**
+```bash
+kubectl apply -f - <<"EOF"
 ---
 apiVersion: v1
 kind: Namespace
@@ -31,16 +40,14 @@ spec:
       volumes:
       - name: storage
         emptyDir: {}
-      - name: config
-        emptyDir: {}
       containers:
       - name: minio
         image: minio/minio:latest
         imagePullPolicy: IfNotPresent
         args:
         - server
+        - --console-address ":9001"
         - /storage
-        - --config-dir=/config
         env:
         - name: MINIO_ACCESS_KEY
           value: "minio"
@@ -48,12 +55,10 @@ spec:
           value: "minio123"
         ports:
         - containerPort: 9000
+        - containerPort: 9001
         volumeMounts:
         - name: storage
           mountPath: "/storage"
-        - name: config
-          mountPath: "/config"
-
 ---
 apiVersion: v1
 kind: Service
@@ -71,8 +76,32 @@ spec:
     - port: 9000
       targetPort: 9000
       protocol: TCP
+      name: api
+    - port: 9001
+      targetPort: 9001
+      protocol: TCP
+      name: console
   selector:
     component: minio
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: minio
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: "minio.kw01"
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: minio
+            port:
+              number: 9001
 
 ---
 apiVersion: batch/v1
@@ -102,6 +131,7 @@ spec:
         volumeMounts:
         - name: config
           mountPath: "/config"
+EOF
 ```
 ---
 
