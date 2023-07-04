@@ -42,11 +42,10 @@ spec:
         emptyDir: {}
       containers:
       - name: minio
-        image: minio/minio:latest
+        image: minio/minio:RELEASE.2021-02-14T04-01-33Z
         imagePullPolicy: IfNotPresent
         args:
         - server
-        - --console-address ":9001"
         - /storage
         env:
         - name: MINIO_ACCESS_KEY
@@ -55,7 +54,6 @@ spec:
           value: "minio123"
         ports:
         - containerPort: 9000
-        - containerPort: 9001
         volumeMounts:
         - name: storage
           mountPath: "/storage"
@@ -77,10 +75,6 @@ spec:
       targetPort: 9000
       protocol: TCP
       name: api
-    - port: 9001
-      targetPort: 9001
-      protocol: TCP
-      name: console
   selector:
     component: minio
 
@@ -101,7 +95,7 @@ spec:
           service:
             name: minio
             port:
-              number: 9001
+              number: 9000
 
 ---
 apiVersion: batch/v1
@@ -154,6 +148,8 @@ defaultSettings:
   replicaZoneSoftAntiAffinity: true
 EOF
 
+kubectl create ns longhorn-system
+
 kubectl apply -f - <<"EOF"
 apiVersion: v1
 kind: Secret
@@ -169,6 +165,9 @@ data:
 EOF
 
 # Install Longhorn
+yum install iscsi-initiator-utils -y # RHEL
+apt -y install open-iscsi # Ubuntu
+
 helm repo add longhorn https://charts.longhorn.io
 helm repo update
 helm install longhorn \
@@ -202,10 +201,9 @@ EOF
 
 ```bash
 # Install Velero Cli
-VELERO_VERSION=v1.10.0; \
-    wget -c https://github.com/vmware-tanzu/velero/releases/download/${VELERO_VERSION}/velero-${VELERO_VERSION}-linux-amd64.tar.gz -O - \
-    | tar -xz -C /tmp/ \
-    && sudo mv /tmp/velero-${VELERO_VERSION}-linux-amd64/velero /usr/local/bin
+wget https://github.com/vmware-tanzu/velero/releases/download/v1.11.0/velero-v1.11.0-linux-amd64.tar.gz
+tar xvf velero-v1.11.0-linux-amd64.tar.gz
+mv velero-v1.11.0-linux-amd64/velero /usr/local/bin
 
 # Install Velero Server
 
@@ -229,50 +227,99 @@ $ velero install --provider velero.io/aws \
 # Install Sample Application
 
 ---
-kubectl -n logging apply -f - <<"EOF"
+kubectl -n nginx apply -f - <<"EOF"
+---
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: nginx
+  name: nginx-example
+  labels:
+    app: nginx
+
 ---
-kind: Pod
-apiVersion: v1
-metadata:
-  namespace: nginx
-  name: nginx
-spec:
-  nodeSelector:
-    kubernetes.io/os: linux
-  containers:
-    - image: nginx
-      name: nginx
-      command: [ "sleep", "1000000" ]
-      volumeMounts:
-        - name: longhorndisk01
-          mountPath: "/mnt/longhorndisk"
-  volumes:
-    - name: longhorndisk01
-      persistentVolumeClaim:
-        claimName: pvc-longhorndisk
----
-apiVersion: v1
 kind: PersistentVolumeClaim
+apiVersion: v1
 metadata:
-  namespace: nginx
-  name: pvc-longhorndisk
+  name: nginx-logs
+  namespace: nginx-example
+  labels:
+    app: nginx
 spec:
+  storageClassName: longhorn
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 10Mi
-  storageClassName: longhorn
+      storage: 50Mi
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  namespace: nginx-example
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+      annotations:
+        pre.hook.backup.velero.io/container: fsfreeze
+        pre.hook.backup.velero.io/command: '["/sbin/fsfreeze", "--freeze", "/var/log/nginx"]'
+        post.hook.backup.velero.io/container: fsfreeze
+        post.hook.backup.velero.io/command: '["/sbin/fsfreeze", "--unfreeze", "/var/log/nginx"]'
+    spec:
+      volumes:
+        - name: nginx-logs
+          persistentVolumeClaim:
+           claimName: nginx-logs
+      containers:
+      - image: nginx:1.17.6
+        name: nginx
+        ports:
+        - containerPort: 80
+        volumeMounts:
+          - mountPath: "/var/log/nginx"
+            name: nginx-logs
+            readOnly: false
+      - image: ubuntu:bionic
+        name: fsfreeze
+        securityContext:
+          privileged: true
+        volumeMounts:
+          - mountPath: "/var/log/nginx"
+            name: nginx-logs
+            readOnly: false
+        command:
+          - "/bin/bash"
+          - "-c"
+          - "sleep infinity"
+  
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: nginx
+  name: my-nginx
+  namespace: nginx-example
+spec:
+  ports:
+  - port: 80
+    targetPort: 80
+  selector:
+    app: nginx
+  type: ClusterIP
 EOF
 
 k run --rm -it curly --image=curlimages/curl sh
 curl -v nginx.nginx
 
-k exec -it $(k get pods -l app=nginx) cat /var/log/nginx/access.log
+k exec -it $(k get pods -l app=nginx -o name) cat /var/log/nginx/access.log
 
 # Create backup
 
