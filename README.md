@@ -129,9 +129,9 @@ EOF
 ```
 ---
 
-```bash
+**3) Install Minio**
 
-# Install longhorn
+```bash
 
 cat << EOF >> longhorn-values.yaml
 persistence:
@@ -164,7 +164,7 @@ data:
   AWS_ENDPOINTS: aHR0cDovL21pbmlvLm1pbmlvOjkwMDA= # http://minio.minio:9000
 EOF
 
-# Install Longhorn
+# Install longhorn chart
 yum install iscsi-initiator-utils -y # RHEL
 apt -y install open-iscsi # Ubuntu
 
@@ -178,8 +178,9 @@ helm install longhorn \
     --version 1.4.0 
 ```
 ---
+
+**4) Install CSI snapshot controller**
 ```bash
-# Install CSI snapshot controller
 
 kubectl -n kube-system create -k "github.com/kubernetes-csi/external-snapshotter/client/config/crd?ref=release-5.0"
 kubectl -n kube-system create -k "github.com/kubernetes-csi/external-snapshotter/deploy/kubernetes/snapshot-controller?ref=release-5.0"
@@ -199,6 +200,8 @@ EOF
 ```
 ---
 
+**5) Install Velero**
+
 ```bash
 # Install Velero Cli
 wget https://github.com/vmware-tanzu/velero/releases/download/v1.11.0/velero-v1.11.0-linux-amd64.tar.gz
@@ -206,27 +209,25 @@ tar xvf velero-v1.11.0-linux-amd64.tar.gz
 mv velero-v1.11.0-linux-amd64/velero /usr/local/bin
 
 # Install Velero Server
-
 cat << EOF >> credentials-velero
 [default]
 aws_access_key_id = minio
 aws_secret_access_key = minio123
 EOF
 
-$ velero install --provider velero.io/aws \
-  --bucket velero --image velero/velero:v1.11.0 \
-  --plugins velero/velero-plugin-for-aws:v1.7.0,velero/velero-plugin-for-csi:v0.4.0 \
-  --backup-location-config region=minio-default,s3ForcePathStyle="true",s3Url=http://minio.minio:9000 \
-  --features=EnableCSI --snapshot-location-config region=minio-default \
-  --use-volume-snapshots=true --secret-file=./credential-velero
+velero install --provider velero.io/aws \
+ --bucket velero --image velero/velero:v1.11.0 \
+ --plugins velero/velero-plugin-for-aws:v1.7.0,velero/velero-plugin-for-csi:v0.4.0 \
+ --backup-location-config region=minio-default,s3ForcePathStyle="true",s3Url=http://minio.minio:9000 \
+ --features=EnableCSI --snapshot-location-config region=minio-default \
+ --use-volume-snapshots=true --secret-file=./credential-velero
 
 ```
 ---
 
+**6) Install Nginx with PV**
+
 ```bash
-
-# Install Sample Application
-
 ---
 kubectl -n nginx apply -f - <<"EOF"
 ---
@@ -321,7 +322,10 @@ k run --rm -it curly --image=curlimages/curl sh
 curl -v nginx.nginx
 
 k exec -it $(k get pods -l app=nginx -o name) cat /var/log/nginx/access.log
-
+```
+---
+**7) Create Backup and Restore**
+```bash
 # Create backup
 
 velero backup create nginx --include-namespaces=nginx
@@ -329,4 +333,4 @@ velero backup create nginx --include-namespaces=nginx
 k delete ns nginx
 
 velero restore create --from-backup=nginx 
-
+```
