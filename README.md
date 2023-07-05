@@ -147,6 +147,10 @@ defaultSettings:
   # Usually Longhorn does not store volumes on the node that it runs on. This setting allows that.
   replicaSoftAntiAffinity: true
   replicaZoneSoftAntiAffinity: true
+ingress:
+  enabled: true
+  ingressClassName: nginx
+  host: longhorn.kw01
 EOF
 
 kubectl create ns longhorn-system
