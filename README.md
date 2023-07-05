@@ -11,6 +11,32 @@
 ```bash
 curl -sfL https://get.rke2.io | sh -
 systemctl enable rke2-server --now
+
+mkdir ~/.kube
+sudo cp /etc/rancher/rke2/rke2.yaml ~/.kube/config
+sudo chown k8sadm ~/.kube/config
+
+curl -LO "https://dl.k8s.io/release/v1.25.9/bin/linux/amd64/kubectl"
+chmod 755 kubectl && sudo mv kubectl /usr/local/bin
+curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+cat <<EOF >> ~/.bashrc
+
+# k8s alias
+
+source <(kubectl completion bash)
+complete -o default -F __start_kubectl k
+
+alias k=kubectl
+alias vi=vim
+alias kn='kubectl config set-context --current --namespace'
+alias kc='kubectl config use-context'
+alias kcg='kubectl config get-contexts'
+alias di='docker images --format "table {{.Repository}}:{{.Tag}}\t{{.ID}}\t{{.Size}}\t{{.CreatedSince}}"'
+alias kge="kubectl get events  --sort-by='.metadata.creationTimestamp'  -o 'go-template={{range .items}}{{.involvedObject.name}}{{\"\t\"}}{{.involvedObject.kind}}{{\"\t\"}}{{.message}}{{\"\t\"}}{{.reason}}{{\"\t\"}}{{.type}}{{\"\t\"}}{{.firstTimestamp}}{{\"\n\"}}{{end}}'"
+EOF
+
+source ~/.bashrc
 ```
 ---
 
