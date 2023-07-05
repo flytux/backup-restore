@@ -214,7 +214,7 @@ tar xvf velero-v1.11.0-linux-amd64.tar.gz
 mv velero-v1.11.0-linux-amd64/velero /usr/local/bin
 
 # Install Velero Server
-cat << EOF >> credentials-velero
+cat << EOF >> credential-velero
 [default]
 aws_access_key_id = minio
 aws_secret_access_key = minio123
