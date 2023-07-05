@@ -14,6 +14,8 @@ cd zsh-5.6.2 && ./configure
 
 make && make install
 
+sudo apt install git zsh -y
+
 sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 
 git clone https://github.com/zsh-users/zsh-autosuggestions ~/.zsh/zsh-autosuggestions
