@@ -1,4 +1,9 @@
-# Backup and restore k8s workloads with volume using velero and longhorn
+# Backup and restore workload and volumes with velero and longhorn
+
+- Install RKE2 Cluster
+- Install Minio / Longhorn / Velero for backup and restore volumes
+- Install sample nginx app
+- Backup and restore nginx app with velero and longhorn
 
 ---
 **1) Install RKE2**
@@ -332,9 +337,13 @@ k exec -it $(k get pods -l app=nginx -o name) cat /var/log/nginx/access.log
 ```bash
 # Create backup
 
-velero backup create nginx --include-namespaces=nginx
+velero backup create nginx --include-namespaces=nginx-example
 
-k delete ns nginx
+k delete ns nginx-example
 
-velero restore create --from-backup=nginx 
+velero restore create --from-backup=nginx
+
+# Check nginx log restored
+k exec -it $(k get pods -l app=nginx -o name) cat /var/log/nginx/access.log
+
 ```
