@@ -149,8 +149,6 @@ defaultSettings:
   replicaZoneSoftAntiAffinity: true
 EOF
 
-# create bucket longhorn
-
 kubectl create ns longhorn-system
 
 kubectl apply -f - <<"EOF"
