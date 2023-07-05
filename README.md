@@ -323,7 +323,7 @@ spec:
 EOF
 
 k run --rm -it curly --image=curlimages/curl sh
-curl -v nginx.nginx
+curl -v my-nginx.nginx-example
 
 k exec -it $(k get pods -l app=nginx -o name) cat /var/log/nginx/access.log
 ```
