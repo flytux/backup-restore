@@ -233,7 +233,6 @@ velero install --provider velero.io/aws \
 **6) Install Nginx with PV**
 
 ```bash
----
 kubectl -n nginx apply -f - <<"EOF"
 ---
 apiVersion: v1
