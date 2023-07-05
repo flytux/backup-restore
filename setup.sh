@@ -37,3 +37,12 @@ alias di='docker images --format "table {{.Repository}}:{{.Tag}}\t{{.ID}}\t{{.Si
 alias kge="kubectl get events  --sort-by='.metadata.creationTimestamp'  -o 'go-template={{range .items}}{{.involvedObject.name}}{{\"\t\"}}{{.involvedObject.kind}}{{\"\t\"}}{{.message}}{{\"\t\"}}{{.reason}}{{\"\t\"}}{{.type}}{{\"\t\"}}{{.firstTimestamp}}{{\"\n\"}}{{end}}'"
 EOF
 
+mkdir ~/.kube
+sudo cp /etc/rancher/rke2/rke2.yaml ~/.kube/config
+sudo chown k8sadm ~/.kube/config 
+
+# Install kubectl / helm
+curl -LO "https://dl.k8s.io/release/v1.25.9/bin/linux/amd64/kubectl"
+chmod 755 kubectl && sudo mv kubectl /usr/local/bin
+curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
