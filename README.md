@@ -42,6 +42,8 @@ source ~/.bashrc
 
 **2) Install Minio**
 ```bash
+kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/v0.0.22/deploy/local-path-storage.yaml
+
 kubectl apply -f - <<"EOF"
 ---
 apiVersion: v1
@@ -70,7 +72,8 @@ spec:
     spec:
       volumes:
       - name: storage
-        emptyDir: {}
+        persistentVolumeClaim:
+          claimName: pvc-minio
       containers:
       - name: minio
         image: minio/minio:RELEASE.2021-02-14T04-01-33Z
@@ -88,6 +91,19 @@ spec:
         volumeMounts:
         - name: storage
           mountPath: "/storage"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-minio
+  namespace: minio
+spec:
+  storageClassName: local-path
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
 ---
 apiVersion: v1
 kind: Service
