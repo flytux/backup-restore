@@ -181,7 +181,8 @@ EOF
 ```bash
 git clone https://github.com/vmware/kube-fluentd-operator.git
 cd kube-fluentd-operator/charts/log-router
-helm upgrade -i kfo -f values.yaml .
+helm upgrade -i kfo ./kube-fluentd-operator/charts/log-router \
+  --set rbac.create=true \
+  --set image.tag=v1.17.2 \
+  --set image.repository=vmware/kube-fluentd-operator
 ```
-
-
