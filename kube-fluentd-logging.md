@@ -3,12 +3,13 @@
 - elasticsearch and minio as sink
 - control namespace logging with configmaps
 - find tuning fluentd options with fluentd stanard functions
-https://github.com/vmware/kube-fluentd-operator
+- emptydir mounted volume logs
+- https://github.com/vmware/kube-fluentd-operator
 
 ---
 
 ```bash
-# Elastic Search 설치
+# Install elastic search 
 $ kubectl create -f https://download.elastic.co/downloads/eck/2.8.0/crds.yaml
 $ kubectl apply -f https://download.elastic.co/downloads/eck/2.8.0/operator.yaml
 
@@ -364,25 +365,51 @@ data:
       languages java
     </filter>
     <match **>
-     @type elasticsearch
-     include_tag_key false
+      @type copy
+      <store>
+      @type s3
 
-     host "quickstart-es-http"
-     scheme "https"
-     port "9200"
-     user "elastic"
-     password "EC8B4HU236RIQ8UDZh92F0Z6"
+      aws_key_id minio
+      aws_sec_key minio123
+      force_path_style true
+      path app-log/${tag}/%Y/%m/%d/
+      s3_bucket kfo-test-log
+      s3_endpoint http://minio:9000
+      s3_region local
+      s3_object_key_format %{path}%{time_slice}_%{uuid_hash}_%{index}.%{file_extension}
+        <buffer tag,time>
+         @type file
+         chunk_limit_size 8MB
+         path /buffers/s3-output.*.buffer
+         retry_forever true
+         timekey 1m
+         timekey_use_utc true
+         timekey_wait 30s
+        </buffer>
+      </store>
+      <store>
+      @type elasticsearch
 
-     logstash_format true
+      include_tag_key false
 
-     reload_connections "true"
-     logstash_prefix "kfo-logger-test"
-     buffer_chunk_limit 1M
-     buffer_queue_limit 32
-     flush_interval 1s
-     max_retry_wait 30
-     disable_retry_limit
-     num_threads 8
+      host "quickstart-es-http"
+      scheme "https"
+      port "9200"
+      user "elastic"
+      password "EC8B4HU236RIQ8UDZh92F0Z6"
+
+      logstash_format true
+
+      ssl_verify false
+      reload_connections "true"
+      logstash_prefix "kfo-logger-test"
+      buffer_chunk_limit 1M
+      buffer_queue_limit 32
+      flush_interval 1s
+      max_retry_wait 30
+      disable_retry_limit
+      num_threads 8
+      </store>
     </match>
 EOF
 
