@@ -413,6 +413,7 @@ data:
     </match>
 EOF
 
+# conf file name -> second fluent.conf
 kubectl create configmap fluentd-config -n kfo-test --from-file=fluent.conf=fluent.conf
 
 
