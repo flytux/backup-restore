@@ -108,16 +108,16 @@ spec:
 ---
 apiVersion: v1
 data:
-  password: Zkw3UHFPRWM4YmpNcnQxYQ==
-  username: ZWxhc3RpYw==
+  password: 
+  username: 
 kind: Secret
 metadata:
   name: elasticsearch-master-credentials
 ---
 apiVersion: v1
 data:
-  access_key_id: Qjg3MDZBNjlCN0U0MUNFOTc4QUI=
-  secret_access_key: N0M0OEJENDFDNjc5OTNBRDhCNjkzQTZCMzM1RUZCNkUyNzkyMUFBNA==
+  access_key_id: 
+  secret_access_key: 
 kind: Secret
 metadata:
   name: s3-auth
