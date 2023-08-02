@@ -1,0 +1,50 @@
+--- 
+apiVersion: logging.banzaicloud.io/v1beta1
+kind: Logging
+metadata:
+  name: logging-prd
+spec:
+  fluentbit: 
+    image:
+      repository: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/elastic-system/fluent/fluent-bit
+      tag: 2.1.4
+  fluentd:
+    image:
+      repository: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/elastic-system/kube-logging/fluentd
+      tag: v1.15-ruby3
+    logLevel: debug
+    configReloaderImage:
+      repository: tbd5d1uh.private-ncr.fin-ntruss.com/k8s/dev/elastic-system/kube-logging/config-reloader
+      tag: v0.0.5
+  controlNamespace: logging
+---
+apiVersion: logging.banzaicloud.io/v1beta1
+kind: Output
+metadata:
+ name: file-output
+spec:
+ file:
+   path: /tmp/logs/${tag}/%Y/%m/%d.%H.%M
+   append: true
+   buffer:
+     timekey: 1m
+     timekey_wait: 10s
+     timekey_use_utc: true
+---
+apiVersion: logging.banzaicloud.io/v1beta1
+kind: Flow
+metadata:
+  name: file-flow
+spec:
+  filters:
+    - parser:
+        remove_key_name_field: false
+        reserve_data: true
+        parse:
+          type: json
+  match:
+     - select:
+         labels:
+           app: app-core-hro-test-prd
+  localOutputRefs:
+    - file-output

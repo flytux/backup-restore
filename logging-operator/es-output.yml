@@ -1,0 +1,33 @@
+---
+apiVersion: logging.banzaicloud.io/v1beta1
+kind: Output
+metadata:
+  name: es-output
+spec:
+  elasticsearch:
+    host: 10.3.20.22
+    port: 32133
+    scheme: https
+    ssl_verify: false
+    ssl_version: TLSv1_2
+    user: elastic
+    password:
+      valueFrom:
+        secretKeyRef:
+          name: elasticsearch-master-credentials
+          key: password
+    buffer:
+      timekey: 1m
+      timekey_wait: 30s
+      timekey_use_utc: true
+---
+apiVersion: v1
+data:
+  password: Zkw3UHFPRWM4YmpNcnQxYQ==
+  username: ZWxhc3RpYw==
+kind: Secret
+metadata:
+  labels:
+    app: elasticsearch-master
+  name: elasticsearch-master-credentials
+type: Opaque
