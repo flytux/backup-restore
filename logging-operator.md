@@ -6,6 +6,14 @@
 - Multi logging setting for different settings
 - hostfile tailers
 
+---
+- Install elasticsearch
+- Intall minio
+- Install logging-operator
+- Install logging test applications
+- Install logging > output > flow
+- Check log in elasstic and s3
+
 ```bash
 -- 
 apiVersion: logging.banzaicloud.io/v1beta1
