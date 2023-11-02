@@ -217,7 +217,12 @@ data:
 EOF
 
 # Install longhorn chart
-yum install iscsi-initiator-utils -y # RHEL
+# RHEL
+yum --setopt=tsflags=noscripts install iscsi-initiator-utils
+echo "InitiatorName=$(/sbin/iscsi-iname)" > /etc/iscsi/initiatorname.iscsi
+systemctl enable iscsid
+systemctl start iscsid
+
 apt -y install open-iscsi # Ubuntu
 
 helm repo add longhorn https://charts.longhorn.io
