@@ -4,6 +4,9 @@
 - Install Minio / Longhorn / Velero for backup and restore volumes
 - Install sample nginx app
 - Backup and restore nginx app with velero and longhorn
+- Install velero and longhorn at additional DR cluster
+- Connect backup location s3 to DR cluster
+- velero restore from backup will restore workload and pv at DR cluster
 
 ---
 **1) Install RKE2**
@@ -215,6 +218,7 @@ data:
   AWS_SECRET_ACCESS_KEY: bWluaW8xMjM= # minio123
   AWS_ENDPOINTS: aHR0cDovL21pbmlvLm1pbmlvOjkwMDA= # http://minio.minio:9000
 EOF
+# AWS_ENDPOINTS: aHR0cDovL21pbmlvLmt3MDE= # http://minio.kw01
 
 # Install longhorn chart
 # RHEL
